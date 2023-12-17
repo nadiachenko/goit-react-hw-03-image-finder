@@ -73,7 +73,7 @@ export default class ImageGallery extends Component {
 
       {error && <div>{error.message}</div>}
 
-      {showModal && (< Modal onClose={this.toggleModal} largeImageURL={largeImageURL} />)}
+      {showModal && (< Modal onClose={this.toggleModal} largeImageURL={largeImageURL}  />)}
 
       {hits && (<div>
         <ul className={css.ImageGallery}>
@@ -81,7 +81,8 @@ export default class ImageGallery extends Component {
             <ImageGalleryItem
               key={id}
               webformatURL={webformatURL}
-              toggleModal={() => this.toggleModal(largeImageURL)}
+              toggleModal={this.toggleModal}
+              largeImageURL={largeImageURL}
             />
           ))}
         </ul>
