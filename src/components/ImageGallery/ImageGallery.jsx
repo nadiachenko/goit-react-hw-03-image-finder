@@ -10,51 +10,44 @@ export default class ImageGallery extends Component {
     hits: [],
     loading: false,
     error: null,
-    page: 1,
     showModal: false,
     largeImageURL: ''
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.query !== this.props.query) {
-      this.setState({ loading: true, hits: [], page: 1, error: null }, () => {
-        this.fetchImages();
-      });
+  async componentDidUpdate(prevProps, prevState) {
+    const { query, page } = this.props;
+    if (prevProps.query !== query || prevProps.page !== page) {
+      this.setState({ loading: true, error: null, hits: (prevProps.query !== query) ? [] : this.state.hits });
+
+      await
+        fetch(`https://pixabay.com/api/?q=${query}&page=${page}&key=40934415-dfd7c79ea7303db44ba7dd17c&image_type=photo&orientation=horizontal&per_page=12`)
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            }
+            return Promise.reject(
+              new Error(`Oops... Something went wrong`)
+            );
+          })
+          .then((hits) => {
+            if (hits.hits.length === 0) {
+              throw new Error(`No images found for query: ${query}`);
+            }
+            else {
+              this.state.hits.length === 0 ?
+                this.setState({ hits: hits.hits })
+                :
+                this.setState({ hits: [...this.state.hits, ...hits.hits] })
+            }
+          })
+          .catch((error) => this.setState({ error }))
+
+      this.setState({ loading: false })
     }
   }
 
-  fetchImages = () => {
-    fetch(`https://pixabay.com/api/?q=${this.props.query}&page=${this.state.page}&key=40934415-dfd7c79ea7303db44ba7dd17c&image_type=photo&orientation=horizontal&per_page=12`)
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        return Promise.reject(
-          new Error(`Oops... Something went wrong`)
-        );
-      })
-      .then((hits) => {
-        if (hits.hits.length === 0) {
-          throw new Error(`No images found for query: ${this.props.query}`);
-        }
-        else {
-          this.state.hits.length === 0 ?
-            this.setState({ hits: hits.hits })
-            :
-            this.setState({ hits: [...this.state.hits, ...hits.hits] })
-        }
-      })
-      .catch((error) => this.setState({ error }))
-      .finally(() => this.setState({ loading: false }));
-
-  };
-
   loadMore = () => {
-    this.setState(
-      (prevState) => ({ page: prevState.page + 1, loading: true }),
-      () => {
-        this.fetchImages();
-      });
+    this.props.loadMore();
   };
 
   toggleModal = (largeImageURL) => {
@@ -62,6 +55,7 @@ export default class ImageGallery extends Component {
       showModal: !state.showModal,
       largeImageURL: largeImageURL
     }));
+    this.setState({ loading: false })
   };
 
 
@@ -73,9 +67,9 @@ export default class ImageGallery extends Component {
 
       {error && <div>{error.message}</div>}
 
-      {showModal && (< Modal onClose={this.toggleModal} largeImageURL={largeImageURL}  />)}
+      {showModal && (< Modal onClose={this.toggleModal} largeImageURL={largeImageURL} />)}
 
-      {hits && (<div>
+      {hits.length > 0 && (<div>
         <ul className={css.ImageGallery}>
           {hits.map(({ id, webformatURL, largeImageURL }) => (
             <ImageGalleryItem
