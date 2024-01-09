@@ -1,35 +1,35 @@
-import { useState } from "react";
-import React from "react"
+import React, { Component } from "react"
 import css from 'components/Searchbar/searchbar.module.css'
 
-export default function  Searchbar({onSubmit})  {
-  const [query, setQuery] = useState('');
-
- const searchImages = (e) => {
-
-  setQuery(e.currentTarget.value.toLowerCase());
+export class Searchbar extends Component {
+  state = {
+    query: ''
   }
 
-  const passQuery = e => {
+  searchImages = (e) => {
+    this.setState({ query: e.currentTarget.value.toLowerCase() });
+  }
+
+  passQuery = e => {
     e.preventDefault();
-    if (query.trim() === "") {
+    if (this.state.query.trim() === "") {
       return;
     }
-    onSubmit(query)
-    setQuery('');
+    this.props.onSubmit(this.state.query)
+    this.setState({ query: '' });
   };
 
-
+  render() {
     return (<header className={css.Searchbar}>
-      <form className={css.SearchForm} onSubmit={passQuery}>
+      <form className={css.SearchForm} onSubmit={this.passQuery}>
         <input
           className={css.SearchForminput}
           type="text"
           autoComplete="off"
           autoFocus
           placeholder="Search images and photos"
-          value={query}
-          onChange={searchImages}
+          value={this.state.query}
+          onChange={this.searchImages}
 
         />
         <button className={css.SearchFormbutton} type="submit">
@@ -38,5 +38,5 @@ export default function  Searchbar({onSubmit})  {
       </form>
     </header>
     );
-  
+  };
 };
